@@ -39,8 +39,8 @@ public class File {
             for(int i = 0; i < arr.length(); i++){
                 JSONObject obj = arr.getJSONObject(i);
 
-                User user = new User(obj.getString("name"), obj.getString("email"),
-                        obj.getString("pw"),obj.getString("address"), obj.getString("avt"), obj.getString("desc"));
+                User user = new User(obj.getString("name"), obj.getString("email"), obj.getString("phone"),
+                        obj.getString("pw"),obj.getString("address"), obj.getString("avt"), obj.getString("desc"), obj.getBoolean("isFriend"));
                 users.add(user);
             }
         } catch (Exception e){
@@ -56,10 +56,12 @@ public class File {
                 JSONObject obj = new JSONObject();
                 obj.put("name", user.getName());
                 obj.put("email", user.getEmail());
+                obj.put("phone", user.getPhone());
                 obj.put("pw", user.getPassword());
                 obj.put("address",user.getAddress());
                 obj.put("avt", user.getAvatar());
                 obj.put("desc", user.getDescription());
+                obj.put("isFriend", user.getIsFriend());
 
                 arr.put(obj);
             }

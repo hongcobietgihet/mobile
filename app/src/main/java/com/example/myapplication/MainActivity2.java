@@ -26,6 +26,7 @@ public class MainActivity2 extends AppCompatActivity {
     TextInputEditText edtEmail;
     TextInputEditText edtPw;
     Button btnLogin;
+    Button btnRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +41,7 @@ public class MainActivity2 extends AppCompatActivity {
         edtEmail = findViewById(R.id.edtEmail);
         edtPw = findViewById(R.id.edtPw);
         btnLogin = findViewById(R.id.btnLogin);
+        btnRegister = findViewById(R.id.btnRegister);
 
         ActivityResultLauncher<Intent> resgisterLauncher =
                 registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -52,12 +54,16 @@ public class MainActivity2 extends AppCompatActivity {
             String email = edtEmail.getText().toString().trim();
             String pw = edtPw.getText().toString().trim();
             if(email.isEmpty() || pw.isEmpty()){
-                Toast.makeText(this, "Vui longf nhập đầy đủ thông tin",
+                Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin",
                         Toast.LENGTH_SHORT).show();
                 return;
             }
 
             List<User> users = File.readUsers(this);
+
+            if (users == null) {
+                users = new java.util.ArrayList<>();
+            }
 
             for(User u : users){
                 if(u.getEmail().equals(email) && u.getPassword().equals(pw)){
@@ -72,6 +78,12 @@ public class MainActivity2 extends AppCompatActivity {
 
             Toast.makeText(this, "Sai email hoặc password",
                     Toast.LENGTH_SHORT).show();
+        });
+
+        btnRegister.setOnClickListener(v ->{
+            Intent intent = new Intent(MainActivity2.this, MainActivity.class);
+
+            resgisterLauncher.launch(intent);
         });
 
     }

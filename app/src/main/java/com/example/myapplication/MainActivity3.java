@@ -27,11 +27,13 @@ public class MainActivity3 extends AppCompatActivity {
     ImageView imgAvatar;
     TextInputEditText edtName;
     TextInputEditText edtEmail;
+    TextInputEditText edtPhone;
     TextInputEditText edtAddress;
     TextInputEditText edtAvatar;
     TextInputEditText edtDesc;
 
     Button btnSave;
+    Button btnFriend;
     Button btnLogout;
     List<User> users;
     User currUser;
@@ -102,11 +104,13 @@ public class MainActivity3 extends AppCompatActivity {
 
         edtName = findViewById(R.id.edtName);
         edtEmail = findViewById(R.id.edtEmail);
+        edtPhone = findViewById(R.id.edtPhone);
         edtAddress = findViewById(R.id.edtAddress);
         edtAvatar = findViewById(R.id.edtAvatar);
         edtDesc = findViewById(R.id.edtDesc);
 
         btnSave = findViewById(R.id.btnSave);
+        btnFriend = findViewById(R.id.btnFriend);
         btnLogout = findViewById(R.id.btnLogout);
 
         String email = getIntent().getStringExtra("email");
@@ -122,6 +126,7 @@ public class MainActivity3 extends AppCompatActivity {
             tvName.setText(currUser.getName());
             edtName.setText(currUser.getName());
             edtEmail.setText(currUser.getEmail());
+            edtPhone.setText(currUser.getPhone());
             edtAddress.setText(currUser.getAddress());
             edtAvatar.setText(currUser.getAvatar());
             edtDesc.setText(currUser.getDescription());
@@ -182,6 +187,9 @@ public class MainActivity3 extends AppCompatActivity {
             String emailNew =
                     edtEmail.getText().toString();
 
+            String phone =
+                    edtPhone.getText().toString();
+
             String address =
                     edtAddress.getText().toString();
 
@@ -202,6 +210,7 @@ public class MainActivity3 extends AppCompatActivity {
 
             currUser.setName(name);
             currUser.setEmail(emailNew);
+            currUser.setPhone(phone);
             currUser.setAddress(address);
             currUser.setAvatar(avatar);
             currUser.setDescription(desc);
@@ -220,6 +229,15 @@ public class MainActivity3 extends AppCompatActivity {
             ).show();
         });
 
+        btnFriend.setOnClickListener(v -> {
+            Intent intent =
+                    new Intent(
+                            MainActivity3.this,
+                            MainActivity5.class);
+
+            startActivity(intent);
+        });
+
         btnLogout.setOnClickListener(v -> {
 
             Intent intent =
@@ -232,5 +250,6 @@ public class MainActivity3 extends AppCompatActivity {
 
             finish();
         });
+
     }
 }

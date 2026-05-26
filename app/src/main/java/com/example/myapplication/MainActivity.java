@@ -26,6 +26,7 @@ import H.User;
 public class MainActivity extends AppCompatActivity {
     TextInputEditText edtName;
     TextInputEditText edtEmail;
+    TextInputEditText edtPhone;
     TextInputEditText edtPw;
     TextInputEditText edtCPw;
     Button btnCreate;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         edtName = findViewById(R.id.edtName);
         edtEmail = findViewById(R.id.edtEmail);
+        edtPhone = findViewById(R.id.edtPhone);
         edtPw = findViewById(R.id.edtPw);
         edtCPw = findViewById(R.id.edtCPw);
 
@@ -44,10 +46,12 @@ public class MainActivity extends AppCompatActivity {
         btnCreate.setOnClickListener(v -> {
             String name = edtName.getText().toString().trim();
             String email = edtEmail.getText().toString().trim();
+            String phone = edtPhone.getText().toString().trim();
             String pw = edtPw.getText().toString().trim();
             String cpw = edtCPw.getText().toString().trim();
+            phone = phone.replaceAll("[\\s\\-\\(\\)]", "");
 
-            if (name.isEmpty() || email.isEmpty() || pw.isEmpty() || cpw.isEmpty()) {
+            if (name.isEmpty() || email.isEmpty() || phone.isEmpty() || pw.isEmpty() || cpw.isEmpty()) {
                 Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin!",
                         Toast.LENGTH_SHORT).show();
                 return;
@@ -66,9 +70,14 @@ public class MainActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if (u.getPhone().equals(phone)) {
+                    Toast.makeText(this, "Số điện thoại đã tồn tại", Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
 
-            User newUser = new User(name, email, pw,"", "", "");
+
+            User newUser = new User(name, email, phone, pw,"", "", "", false);
             users.add(newUser);
 
             File.saveUsers(this, users);
