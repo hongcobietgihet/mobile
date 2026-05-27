@@ -1,41 +1,32 @@
 package com.example.myapplication;
 
+import model.User;
+
 public class post {
 
-    private String name;
-    private String avatar;
+    private int id;
+    private int user_id;
+
+    private User author;
     private String content;
-    private String time;
+    private String created_at;
     private boolean isHidden;
 
-    public post(
-            String name,
-            String avatar,
-            String content,
-            String time,
-            boolean isHidden
-    ) {
-        this.name = name;
-        this.avatar = avatar;
-        this.content = content;
-        this.time = time;
-        this.isHidden = isHidden;
+
+    public int getId() {return id; }
+
+    public int getUser_idId() {return user_id; }
+    public User getAuthor() {
+        return author;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getAvatar() {
-        return avatar;
-    }
 
     public String getContent() {
         return content;
     }
 
-    public String getTime() {
-        return time;
+    public String getCreated_at() {
+        return created_at;
     }
 
     public boolean isHidden() {
@@ -44,5 +35,14 @@ public class post {
 
     public void setHidden(boolean hidden){
         isHidden = hidden;
+    }
+
+    public String getName() {
+        if(author == null) return "";
+        return author.getName();
+    }
+    public String getAvatar() {
+        if(author == null) return "";
+        return author.getAvatar();
     }
 }

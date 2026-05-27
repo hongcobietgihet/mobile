@@ -2,12 +2,9 @@ package com.example.myapplication;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -27,8 +24,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import H.File;
-import H.User;
+import model.LoginResponse;
+import model.User;
+import model.CreatePostRequest;
+import model.CreatePostResponse;
+import model.DeletePostResponse;
+import model.GetPostsResponse;
+import model.User;
+
+import model.ApiService;
+import model.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity4
         extends AppCompatActivity {
@@ -37,8 +46,9 @@ public class MainActivity4
     Button btnPost;
     ListView listView;
 
-    static ArrayList<post> postList;
+    ArrayList<post> postList;
     postAdapter adapter;
+    ApiService service;
 
     User currUser;
 
@@ -55,25 +65,84 @@ public class MainActivity4
         setSupportActionBar(toolbar);
 
 
-        String email = getIntent().getStringExtra("email");
+        int user_id = getIntent().getIntExtra("user_id", -1);
 
-        List<User> users = File.readUsers(this);
+        service =
+                RetrofitClient
+                        .getRetrofit()
+                        .create(ApiService.class);
+        service.getProfile(user_id)
+                .enqueue(new Callback<LoginResponse>() {
+                    @Override
+                    public void onResponse(
+                            Call<LoginResponse> call,
+                            Response<LoginResponse> response
+                    ) {
 
-        for (User u : users) {
+                        if(response.isSuccessful()
+                                && response.body() != null){
 
-            if (u.getEmail()
-                    .equals(email)) {
+                            currUser = response.body().getUser();
+                        }
+                    }
 
-                currUser = u;
+                    @Override
+                    public void onFailure(
+                            Call<LoginResponse> call,
+                            Throwable t
+                    ) {
 
-                break;
-            }
-        }
+                        Toast.makeText(
+                                MainActivity4.this,
+                                t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
 
-        if (postList == null) {
-            postList = new ArrayList<>();
-        }
+
+        postList = new ArrayList<>();
+
         adapter = new postAdapter(this, postList);
+        service =
+                RetrofitClient
+                        .getRetrofit()
+                        .create(ApiService.class);
+        service.getAllPosts()
+                .enqueue(new Callback<GetPostsResponse>() {
+                    @Override
+                    public void onResponse(
+                            Call<GetPostsResponse> call,
+                            Response<GetPostsResponse> response
+                    ) {
+
+                        if(response.isSuccessful()
+                                && response.body() != null){
+
+                            postList.clear();
+
+                            postList.addAll(
+                                    response
+                                            .body()
+                                            .getData()
+                            );
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(
+                            Call<GetPostsResponse> call,
+                            Throwable t
+                    ) {
+
+                        Toast.makeText(
+                                MainActivity4.this,
+                                t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
         listView.setAdapter(adapter);
 
         btnPost.setOnClickListener(v -> {
@@ -85,20 +154,64 @@ public class MainActivity4
                 return;
             }
 
-            if (currUser == null) {
-                Toast.makeText(this, "Không tìm thấy user", Toast.LENGTH_SHORT).show();
+            if(user_id == -1){
+                Toast.makeText(this, "User ID lỗi", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            String time = getCurrentTime();
+            CreatePostRequest request =
+                    new CreatePostRequest(user_id, content);
+            service.createPost(request)
+                    .enqueue(
+                            new Callback<CreatePostResponse>() {
+                                @Override
+                                public void onResponse(
+                                        Call<CreatePostResponse> call,
+                                        Response<CreatePostResponse> response
+                                ) {
 
-            postList.add(
-                    0,
-                    new post(currUser.getName(), currUser.getAvatar(), content, time, false)
-            );
+                                    if(response.isSuccessful()
+                                            && response.body() != null){
 
-            adapter.notifyDataSetChanged();
-            edtContent.setText("");
+                                        post newPost =
+                                                response
+                                                        .body()
+                                                        .getData();
+                                        postList.add(0, newPost);
+                                        adapter.notifyDataSetChanged();
+
+                                        edtContent.setText("");
+
+                                        Toast.makeText(
+                                                MainActivity4.this,
+                                                "Đăng bài thành công",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+
+                                    } else {
+
+                                        Toast.makeText(
+                                                MainActivity4.this,
+                                                "Đăng bài không thành công",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(
+                                        Call<CreatePostResponse> call,
+                                        Throwable t
+                                ) {
+
+                                    Toast.makeText(
+                                            MainActivity4.this,
+                                            t.getMessage(),
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            }
+                    );
 
         });
 
@@ -116,8 +229,40 @@ public class MainActivity4
                 }
 
                 else if (item.getItemId() == R.id.itemmenu2) {
-                    postList.remove(position);
-                    adapter.notifyDataSetChanged();
+                    final post p = postList.get(position);
+                    service.deletePost(p.getId())
+                            .enqueue(
+                                    new Callback<DeletePostResponse>() {
+
+                                        @Override
+                                        public void onResponse(
+                                                Call<DeletePostResponse> call,
+                                                Response<DeletePostResponse> response
+                                        ) {
+
+                                            if(response.isSuccessful()){
+                                                postList.remove(p);
+
+                                                adapter.notifyDataSetChanged();
+
+                                                Toast.makeText(
+                                                        MainActivity4.this,
+                                                        "Đã xoá bài viết",
+                                                        Toast.LENGTH_SHORT
+                                                ).show();
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<DeletePostResponse> call, Throwable t) {
+                                            Toast.makeText(
+                                                    MainActivity4.this,
+                                                    t.getMessage(),
+                                                    Toast.LENGTH_SHORT
+                                            ).show();
+                                        }
+                                    }
+                            );
                 }
 
                 return true;
@@ -127,10 +272,6 @@ public class MainActivity4
         });
     }
 
-    private String getCurrentTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        return sdf.format(new Date());
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -143,7 +284,7 @@ public class MainActivity4
         int id = item.getItemId();
         if(id == R.id.option1){
             Intent intent = new Intent(this, MainActivity3.class);
-            intent.putExtra("email", currUser.getEmail());
+            intent.putExtra("user_id", currUser.getId());
             startActivity(intent);
             return true;
         }
@@ -151,7 +292,7 @@ public class MainActivity4
             Collections.sort(postList, new Comparator<post>() {
                 @Override
                 public int compare(post o1, post o2) {
-                    return o2.getTime().compareTo(o1.getTime());
+                    return o2.getCreated_at().compareTo(o1.getCreated_at());
                 }
             });
             adapter.notifyDataSetChanged();
@@ -162,7 +303,7 @@ public class MainActivity4
             Collections.sort(postList, new Comparator<post>() {
                 @Override
                 public int compare(post o1, post o2) {
-                    return o2.getName().compareTo(o1.getName());
+                    return o2.getAuthor().getName().compareTo(o1.getAuthor().getName());
                 }
             });
             adapter.notifyDataSetChanged();

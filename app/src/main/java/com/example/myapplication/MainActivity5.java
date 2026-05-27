@@ -18,9 +18,15 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import H.File;
-import H.User;
+import model.User;
+import model.ApiService;
+import model.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity5 extends AppCompatActivity {
 
@@ -49,7 +55,8 @@ public class MainActivity5 extends AppCompatActivity {
         btnNhan = findViewById(R.id.btnNhan);
         txtTotal = findViewById(R.id.txtTotal);
 
-        users = (ArrayList<User>) File.readUsers(this);
+        users = new ArrayList<>();
+        int userId = getIntent().getIntExtra("user_id", -1);
 
         suggestList = new ArrayList<>();
         requestList = new ArrayList<>();
@@ -60,6 +67,49 @@ public class MainActivity5 extends AppCompatActivity {
         rAdt = new requestAdapter(this, requestList, friendList);
 
         lvFriend.setAdapter(rAdt);
+
+        ApiService service =
+                RetrofitClient
+                        .getRetrofit()
+                        .create(ApiService.class);
+        service.getFriends(userId)
+                .enqueue(new Callback<List<User>>() {
+
+                    @Override
+                    public void onResponse(
+                            Call<List<User>> call,
+                            Response<List<User>> response
+                    ) {
+
+                        if(response.isSuccessful()
+                                && response.body() != null){
+
+                            friendList.clear();
+
+                            friendList.addAll(
+                                    response.body()
+                            );
+
+                            rAdt.notifyDataSetChanged();
+
+                            txtTotal.setText("Tổng số bạn bè: "
+                                    + friendList.size()
+                            );
+                        }
+                    }
+                    @Override
+                    public void onFailure(
+                            Call<List<User>> call,
+                            Throwable t
+                    ) {
+
+                        Toast.makeText(
+                                MainActivity5.this,
+                                t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
 
         checkContactsPermission();
 

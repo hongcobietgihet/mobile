@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-import H.User;
+import model.User;
 
 public class suggestAdapter extends ArrayAdapter<User> {
     Activity context;

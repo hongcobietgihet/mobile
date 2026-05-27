@@ -7,19 +7,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.List;
+import model.LoginResponse;
+import model.User;
+import model.UpdateProfileRequest;
+import model.UpdateProfileResponse;
+import model.ApiService;
+import model.RetrofitClient;
 
-import H.File;
-import H.User;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity3 extends AppCompatActivity {
 
@@ -35,7 +37,6 @@ public class MainActivity3 extends AppCompatActivity {
     Button btnSave;
     Button btnFriend;
     Button btnLogout;
-    List<User> users;
     User currUser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +70,8 @@ public class MainActivity3 extends AppCompatActivity {
                     );
 
             intent.putExtra(
-                    "email",
-                    currUser.getEmail()
+                    "user_id",
+                    currUser.getId()
             );
 
             startActivity(intent);
@@ -94,8 +95,8 @@ public class MainActivity3 extends AppCompatActivity {
                     );
 
             intent.putExtra(
-                    "email",
-                    currUser.getEmail()
+                    "user_id",
+                    currUser.getId()
             );
 
             startActivity(intent);
@@ -113,31 +114,75 @@ public class MainActivity3 extends AppCompatActivity {
         btnFriend = findViewById(R.id.btnFriend);
         btnLogout = findViewById(R.id.btnLogout);
 
-        String email = getIntent().getStringExtra("email");
-        users = File.readUsers(this);
-        for(User u : users){
-            if(u.getEmail().equals(email)){
-                currUser = u;
-                break;
-            }
-        }
+        int user_id =
+                getIntent().getIntExtra("user_id", -1);
 
-        if(currUser != null){
-            tvName.setText(currUser.getName());
-            edtName.setText(currUser.getName());
-            edtEmail.setText(currUser.getEmail());
-            edtPhone.setText(currUser.getPhone());
-            edtAddress.setText(currUser.getAddress());
-            edtAvatar.setText(currUser.getAvatar());
-            edtDesc.setText(currUser.getDescription());
+        ApiService service = RetrofitClient
+                        .getRetrofit()
+                        .create(ApiService.class);
 
-            Glide
-                    .with(this)
-                    .load(currUser.getAvatar())
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_foreground)
-                    .into(imgAvatar);
-        }
+        service.getProfile(user_id)
+                .enqueue(new Callback<LoginResponse>() {
+                    @Override
+                    public void onResponse(
+                            Call<LoginResponse> call,
+                            Response<LoginResponse> response
+                    ) {
+
+                        if(response.isSuccessful()
+                                && response.body() != null){
+
+                            currUser = response.body().getUser();
+
+                            tvName.setText(
+                                    currUser.getName()
+                            );
+
+                            edtName.setText(
+                                    currUser.getName()
+                            );
+
+                            edtEmail.setText(
+                                    currUser.getEmail()
+                            );
+
+                            edtPhone.setText(
+                                    currUser.getPhone()
+                            );
+
+                            edtAddress.setText(
+                                    currUser.getAddress()
+                            );
+
+                            edtAvatar.setText(
+                                    currUser.getAvatar()
+                            );
+
+                            edtDesc.setText(
+                                    currUser.getDescription()
+                            );
+
+                            Glide
+                                    .with(MainActivity3.this)
+                                    .load(currUser.getAvatar())
+                                    .placeholder(R.drawable.ic_launcher_foreground)
+                                    .error(R.drawable.ic_launcher_foreground)
+                                    .into(imgAvatar);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(
+                            Call<LoginResponse> call,
+                            Throwable t
+                    ) {
+                        Toast.makeText(MainActivity3.this,
+                                t.getMessage(),
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                });
+
 
         edtAvatar.addTextChangedListener(
                 new android.text.TextWatcher() {
@@ -181,59 +226,113 @@ public class MainActivity3 extends AppCompatActivity {
 
         btnSave.setOnClickListener(v -> {
 
-            String name =
-                    edtName.getText().toString();
+                    String name =
+                            edtName.getText().toString();
 
-            String emailNew =
-                    edtEmail.getText().toString();
+                    String email =
+                            edtEmail.getText().toString();
 
-            String phone =
-                    edtPhone.getText().toString();
+                    String phone =
+                            edtPhone.getText().toString();
 
-            String address =
-                    edtAddress.getText().toString();
+                    String address =
+                            edtAddress.getText().toString();
 
-            String avatar =
-                    edtAvatar.getText().toString();
+                    String avatar =
+                            edtAvatar.getText().toString();
 
-            String desc =
-                    edtDesc.getText().toString();
+                    String desc =
+                            edtDesc.getText().toString();
 
-            if (name.isEmpty() ||
-                    emailNew.isEmpty()) {
+                    if (name.isEmpty() ||
+                            email.isEmpty()) {
 
-                Toast.makeText(this, "Không được để trống",
-                        Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Không được để trống",
+                                Toast.LENGTH_SHORT).show();
 
-                return;
-            }
+                        return;
+                    }
 
-            currUser.setName(name);
-            currUser.setEmail(emailNew);
-            currUser.setPhone(phone);
-            currUser.setAddress(address);
-            currUser.setAvatar(avatar);
-            currUser.setDescription(desc);
-            File.saveUsers(this, users);
-            tvName.setText(name);
+            UpdateProfileRequest request =
+                    new UpdateProfileRequest(
+                            name,
+                            address,
+                            avatar,
+                            desc,
+                            phone
+                    );
 
-            Glide
-                    .with(this)
-                    .load(avatar)
-                    .into(imgAvatar);
+            service.updateProfile(user_id, request)
+                    .enqueue(
+                            new Callback<UpdateProfileResponse>() {
 
-            Toast.makeText(
-                    this,
-                    "Đã lưu thành công",
-                    Toast.LENGTH_SHORT
-            ).show();
+                                @Override
+                                public void onResponse(
+                                        Call<UpdateProfileResponse> call,
+                                        Response<UpdateProfileResponse> response
+                                ) {
+
+                                    if(response.isSuccessful()
+                                            && response.body() != null){
+
+                                        currUser =
+                                                response
+                                                        .body()
+                                                        .getUser();
+
+                                        tvName.setText(
+                                                currUser.getName()
+                                        );
+
+                                        Glide
+                                                .with(MainActivity3.this)
+                                                .load(
+                                                        currUser.getAvatar()
+                                                )
+                                                .into(imgAvatar);
+
+                                        Toast.makeText(
+                                                MainActivity3.this,
+                                                "Đã lưu thành công",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+
+                                    } else {
+
+                                        Toast.makeText(
+                                                MainActivity3.this,
+                                                "Cập nhật không thành công",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(
+                                        Call<UpdateProfileResponse> call,
+                                        Throwable t
+                                ) {
+
+                                    Toast.makeText(
+                                            MainActivity3.this,
+                                            t.getMessage(),
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            }
+                    );
+
+
         });
+
 
         btnFriend.setOnClickListener(v -> {
             Intent intent =
                     new Intent(
                             MainActivity3.this,
                             MainActivity5.class);
+
+            intent.putExtra("user_id", currUser.getId());
 
             startActivity(intent);
         });

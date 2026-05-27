@@ -3,12 +3,9 @@ package com.example.myapplication;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -18,8 +15,18 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.google.android.material.textfield.TextInputEditText;
 import java.util.List;
 
-import H.File;
-import H.User;
+import model.LoginResponse;
+import model.LoginRequest;
+import model.User;
+import model.RegisterRequest;
+import model.RegisterResponse;
+import model.ApiService;
+import model.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 public class MainActivity2 extends AppCompatActivity {
 
@@ -59,25 +66,51 @@ public class MainActivity2 extends AppCompatActivity {
                 return;
             }
 
-            List<User> users = File.readUsers(this);
 
-            if (users == null) {
-                users = new java.util.ArrayList<>();
-            }
+            ApiService service = RetrofitClient
+                            .getRetrofit()
+                            .create(ApiService.class);
 
-            for(User u : users){
-                if(u.getEmail().equals(email) && u.getPassword().equals(pw)){
-                    Intent intent = new Intent(MainActivity2.this, MainActivity3.class);
+            LoginRequest request =
+                    new LoginRequest(email, pw);
 
-                    intent.putExtra("email", u.getEmail());
-                    startActivity(intent);
+            service.login(request).enqueue(new Callback<LoginResponse>() {
 
-                    return;
-                }
-            }
+                        @Override
+                        public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                            if(response.isSuccessful() && response.body() != null){
+                                LoginResponse loginResponse =
+                                        response.body();
 
-            Toast.makeText(this, "Sai email hoặc password",
-                    Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(
+                                                MainActivity2.this,
+                                                MainActivity3.class);
+
+                                if (loginResponse.getUser() != null) {
+                                    intent.putExtra("user_id", loginResponse.getUser().getId());
+                                } else {
+                                    intent.putExtra("user_id", -1);
+                                }
+
+                                startActivity(intent);
+
+                            } else {
+                                Toast.makeText(MainActivity2.this, "Sai email hoặc password",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<LoginResponse> call, Throwable t) {
+                            Toast.makeText(MainActivity2.this, t.getMessage(),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                        }
+                    });
+
+
         });
 
         btnRegister.setOnClickListener(v ->{

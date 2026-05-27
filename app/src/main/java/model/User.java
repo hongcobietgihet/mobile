@@ -1,29 +1,22 @@
-package H;
+package model;
 
-import androidx.navigationevent.NavigationEventTransitionState;
+import com.google.gson.annotations.SerializedName;
 
 public class User {
+    private int id;
     private String name;
     private String email;
     private String phone;
-    private String pw;
+    private String password;
     private String address;
-    private String avt;
-    private String desc;
+
+    private String avatar_url;
+    private String description;
     private Boolean isFriend;
 
     public User() {}
 
-    public User(String name, String email,String phone, String pw, String address, String avt, String desc, Boolean isFriend){
-        this.name = name;
-        this.email = email;
-        this.phone = phone;
-        this.pw = pw;
-        this.address = address;
-        this.avt = avt;
-        this.desc = desc;
-        this.isFriend = isFriend;
-    }
+    public int getId(){return id; }
 
     public String getName(){
         return name;
@@ -36,7 +29,7 @@ public class User {
     public String getPhone() {return phone; }
 
     public String getPassword(){
-        return pw;
+        return password;
     }
 
     public String getAddress(){
@@ -44,16 +37,17 @@ public class User {
     }
 
     public String getAvatar(){
-        return avt;
+        return avatar_url;
     }
 
     public String getDescription(){
-        return desc;
+        return description;
     }
     public Boolean getIsFriend(){return isFriend;}
 
 
 
+    public void setId(int id){ this.id = id; }
 
     public void setName(String name) {
         this.name = name;
@@ -65,7 +59,7 @@ public class User {
     public void setPhone(String phone) {this.phone = phone; }
 
     public void setPassword(String password) {
-        this.pw = password;
+        this.password = password;
     }
 
     public void setAddress(String address) {
@@ -75,12 +69,12 @@ public class User {
 
     public void setAvatar(String avatar) {
 
-        this.avt = avatar;
+        this.avatar_url = avatar;
     }
 
     public void setDescription(String description) {
 
-        this.desc = description;
+        this.description = description;
     }
 
     public void setIsFriend(Boolean isFriend){

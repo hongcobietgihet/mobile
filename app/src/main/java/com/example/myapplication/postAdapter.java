@@ -50,7 +50,7 @@ public class postAdapter
 
         txtName.setText(post.getName());
 
-        txtTime.setText(post.getTime());
+        txtTime.setText(post.getCreated_at());
 
         txtContent.setText(post.getContent());
 

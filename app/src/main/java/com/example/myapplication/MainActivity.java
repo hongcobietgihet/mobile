@@ -1,26 +1,24 @@
 package com.example.myapplication;
-
+import model.RegisterRequest;
+import model.RegisterResponse;
+import model.ApiService;
+import model.RetrofitClient;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 
 import java.util.List;
 
-import H.File;
-import H.User;
+
+import model.User;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -63,32 +61,46 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            List<User> users = File.readUsers(this);
-            for (User u : users) {
-                if (u.getEmail().equals(email)) {
-                    Toast.makeText(this, "Email đã tồn tại",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (u.getPhone().equals(phone)) {
-                    Toast.makeText(this, "Số điện thoại đã tồn tại", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
+            ApiService service = RetrofitClient
+                    .getRetrofit()
+                    .create(ApiService.class);
 
+            RegisterRequest request = new RegisterRequest(name, email, phone, pw);
+            service.register(request).enqueue(new Callback<RegisterResponse>() {
 
-            User newUser = new User(name, email, phone, pw,"", "", "", false);
-            users.add(newUser);
+                        @Override
+                        public void onResponse(Call<RegisterResponse> call,
+                                Response<RegisterResponse> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(MainActivity.this, "Đăng ký thành công",
+                                        Toast.LENGTH_SHORT).show();
 
-            File.saveUsers(this, users);
+                                Intent intent = new Intent(
+                                                MainActivity.this,
+                                                MainActivity2.class
+                                        );
+                                startActivity(intent);
 
-            Toast.makeText(this, "Đăng ký thành công",
-                    Toast.LENGTH_SHORT).show();
+                                finish();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Đăng ký không thành công",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        }
 
-            Intent intent = new Intent(MainActivity.this, MainActivity2.class);
-            startActivity(intent);
+                        @Override
+                        public void onFailure(
+                                Call<RegisterResponse> call,
+                                Throwable t) {
 
-            finish();
+                            Toast.makeText(
+                                    MainActivity.this,
+                                    t.getMessage(),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    });
         });
     }
 }

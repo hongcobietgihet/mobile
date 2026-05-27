@@ -10,9 +10,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import H.User;
+import model.User;
 
 public class requestAdapter  extends ArrayAdapter<User> {
     Activity context;
